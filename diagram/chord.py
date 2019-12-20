@@ -251,7 +251,7 @@ class MultiFingerChord(UkuleleChord):
                         string=int(e['string']),
                         fret=int(e['fret']),
                         color=e.get('color'),
-                        label=e['finger'],
+                        label=e['label'],
                         font_color=e.get('font_color')
                         )
 
