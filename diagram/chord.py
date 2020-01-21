@@ -3,6 +3,8 @@ import diagram
 from .compat import StringIO
 from .utils import convert_int
 
+import logging
+
 
 class Chord(object):
     """
@@ -17,9 +19,8 @@ class Chord(object):
     or a list as above (handy when reading config from YAML, for example)
     ['T', '-' ,'-', 1, 3, 2]
 
-    barre = int specifying a fret to be completely barred. Minimal barres are
-    automatically inserted, so this should be used when you want to override
-    this behaviour.
+    barre = bool, whether to draw a full-width barre or not.
+    This will auotmatically be drawn at the lowest fretted (non-zero) position,
     """
     default_style = AttrDict(diagram.FRETBOARD_STYLE) + AttrDict(diagram.CHORD_STYLE)
     inlays = None
@@ -29,9 +30,9 @@ class Chord(object):
             self,
             positions=None,
             fingers=None,
-            barre=None,
+            barre=False,
             title=None,
-            style=None
+            style=None,
     ):
 
         if positions is None:
@@ -56,13 +57,24 @@ class Chord(object):
         except TypeError:
             self.fingers = list(str(fingers))
 
-        self.barre = barre
+        # barre spec is bool, as it can only be placed
+        # at the lowest non-zeor fretted position
+        print("arg: barre = {}".format(str(barre)))
+        if barre:
+            barrepos = min([p for p in self.positions if p is not None and p > 0])
+            self.barre = barrepos
+        else:
+            self.barre = None
+
+        # debuggery
+        print(self.barre)
 
         self.style = self.default_style + AttrDict(style or {})
 
         self.title = title
 
         self.fretboard = None
+
 
     @property
     def fretboard_cls(self):
@@ -178,12 +190,15 @@ class MultiFingerChord(UkuleleChord):
 
     def __init__(self, **kwargs):
 
+        if kwargs.get('barre', False):
+            # figure out where the barre goes.
+            pass
 
         # ensure we have only expected args for the parent class
         superargs = {
             'positions': kwargs.get('positions', None),
             'fingers': kwargs.get('fingers', None),
-            'barre': kwargs.get('barre', None),
+            'barre': kwargs.get('barre', False),
             'title': kwargs.get('title', None),
             'style': kwargs.get('style', None),
             }
@@ -191,7 +206,8 @@ class MultiFingerChord(UkuleleChord):
         super().__init__(**superargs)
 
         fretted_positions = list(filter(lambda pos: isinstance(pos, int), self.positions))
-        self.maxfret = max(fretted_positions)
+        print(fretted_positions)
+        self.maxfret = max(fretted_positions) or None
         self.minfret = min([p for p in fretted_positions if p >= 0 ])
         # print("min: {} max: {}".format(self.minfret, self.maxfret))
 
