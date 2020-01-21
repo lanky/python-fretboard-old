@@ -74,7 +74,10 @@ class Fretboard(object):
 
     def calculate_layout(self):
         # Bounding box of our fretboard
-        self.layout.x = self.style.drawing.spacing
+        # this needs changing to  indent a little on the left
+        self.layout.x = (self.style.drawing.spacing
+                        + self.style.fret_label.width / 2)
+
         # Above the fret box is the title, with padding either side
         self.layout.y = self.style.drawing.spacing
         if self.title:
@@ -84,7 +87,7 @@ class Fretboard(object):
         # Add some extra space on the right for fret indicators
         self.layout.width = (self.style.drawing.width
                              - self.layout.x
-                             - self.style.drawing.spacing)
+                             - self.style.drawing.spacing / 2)
 #        if self.frets[0] > 0:
 # allow for fret labels on ALL diagrams for consistent width
         self.layout.width -= self.style.fret_label.width
@@ -193,7 +196,8 @@ class Fretboard(object):
             )
 
     def draw_inlays(self):
-        x = self.style.drawing.spacing - (self.style.inlays.radius * 4)
+        # x = self.style.drawing.spacing - (self.style.inlays.radius * 4)
+        x = self.layout.x - (self.style.inlays.radius * 4)
 
         for index, fret in enumerate(self.frets):
             if index == 0:
@@ -294,7 +298,8 @@ class Fretboard(object):
     def draw_marker(self, marker):
         # Fretted position, add the marker to the fretboard.
         x = (self.style.drawing.spacing
-             + (self.layout.string_space * marker.string))
+             + (self.layout.string_space * marker.string)
+             + self.style.fret_label.width / 2)
         y = sum((
             self.layout.y,
             self.style.nut.size,
@@ -330,9 +335,11 @@ class Fretboard(object):
 
     def draw_barre(self, marker):
         start_x = (self.style.drawing.spacing
-                   + self.layout.string_space * marker.string[0])
+                   + self.layout.string_space * marker.string[0]
+                   + self.style.fret_label.width / 2)
         end_x = (self.style.drawing.spacing
-                 + self.layout.string_space * marker.string[1])
+                 + self.layout.string_space * marker.string[1]
+                 + self.style.fret_label.width / 2)
 
         y = sum((
             self.layout.y,
@@ -381,7 +388,7 @@ class Fretboard(object):
 
     def draw_title(self):
         if self.title is not None:
-            x = self.layout.width/2 + self.style.drawing.spacing
+            x = self.layout.width/2 + self.style.drawing.spacing + (self.style.fret_label.width / 2)
             y = self.style.drawing.spacing
             self.drawing.add(
                 self.drawing.text(
