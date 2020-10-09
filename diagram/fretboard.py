@@ -57,12 +57,15 @@ class Fretboard(object):
 
     def add_marker(self, string, fret,
                    color=None, label=None, font_color=None):
+        # adding in a marker id for the containing 'group' element
+        marker_id = len(self.markers) + 1
         self.markers.append(AttrDict({
             'fret': fret,
             'string': string,
             'color': color,
             'label': label,
             'font_color': font_color,
+            'groupid': 'blob{:02d}'.format(marker_id)
         }))
 
     def add_barre(self, fret, strings, finger):
@@ -136,6 +139,10 @@ class Fretboard(object):
                    + self.style.drawing.font_size / 2
                    - self.style.drawing.spacing)
 
+        # add a group for the labels to get around IE
+        label_group = self.drawing.add(self.drawing.g(id="string_labels"))
+        label_group.translate(0, label_y)
+
         for index, string in enumerate(self.strings):
             # adds a style option so all strings have the same width
             if self.style.string.equal_weight:
@@ -167,19 +174,19 @@ class Fretboard(object):
             )
 
             # Draw the label above the string
+            label_size = self.style.string.label_font_size or self.style.drawing.font_size
             if string.label is not None:
-                self.drawing.add(
+                label_group.add(
                     self.drawing.text(
                         string.label,
-                        insert=(x, label_y),
+                        insert=(x, label_size * 0.75),
                         font_family=self.style.string.label_font_family or
                                     self.style.drawing.font_family,
-                        font_size=self.style.string.label_font_size or
-                                  self.style.drawing.font_size,
+                        font_size=label_size,
                         font_weight='bold',
                         fill=string.font_color or self.style.marker.color,
                         text_anchor='middle',
-                        dominant_baseline='hanging'
+#                        dominant_baseline='hanging'
                     )
                 )
 
@@ -307,9 +314,13 @@ class Fretboard(object):
              - self.layout.fret_space / 2)
         ))
 
-        self.drawing.add(
+        # add a marker group
+        blobgrp = self.drawing.add( self.drawing.g(id=marker.groupid))
+        blobgrp.translate(x, y)
+
+        blobgrp.add(
             self.drawing.circle(
-                center=(x, y),
+                center=(0, 0),
                 r=self.style.marker.radius,
                 fill=marker.color or self.style.marker.color,
                 stroke=self.style.marker.border_color,
@@ -319,16 +330,15 @@ class Fretboard(object):
 
         # Draw the label
         if marker.label is not None:
-            self.drawing.add(
+            blobgrp.add(
                 self.drawing.text(
                     marker.label,
-                    insert=(x, y),
+                    insert=(0, (self.style.marker.radius / 2) - 2),
                     font_family=self.style.drawing.font_family,
                     font_size=self.style.drawing.font_size,
                     font_weight='bold',
                     fill=marker.font_color or self.style.marker.font_color,
                     text_anchor='middle',
-                    alignment_baseline='central',
                     dominant_baseline='middle'
                 )
             )
@@ -348,12 +358,15 @@ class Fretboard(object):
              - self.layout.fret_space / 2)
         ))
 
+        barregrp = self.drawing.add( self.drawing.g(id='barre01'))
+        barregrp.translate(start_x, y)
+
         # Lines don't support borders, so fake it by drawing
         # a slightly larger line behind it.
-        self.drawing.add(
+        barregrp.add(
             self.drawing.line(
-                start=(start_x, y),
-                end=(end_x, y),
+                start=(0, 0),
+                end=(end_x - start_x, 0),
                 stroke=self.style.marker.border_color,
                 stroke_linecap='round',
                 stroke_width=(self.style.marker.radius * 2
@@ -361,10 +374,10 @@ class Fretboard(object):
             )
         )
 
-        self.drawing.add(
+        barregrp.add(
             self.drawing.line(
-                start=(start_x, y),
-                end=(end_x, y),
+                start=(0, 0),
+                end=(end_x - start_x, 0),
                 stroke=self.style.marker.color,
                 stroke_linecap='round',
                 stroke_width=self.style.marker.radius * 2
@@ -372,17 +385,15 @@ class Fretboard(object):
         )
 
         if marker.label is not None:
-            self.drawing.add(
+            barregrp.add(
                 self.drawing.text(
                     marker.label,
-                    insert=(start_x, y),
+                    insert=(0, (self.style.marker.radius / 2) - 2),
                     font_family=self.style.drawing.font_family,
                     font_size=self.style.drawing.font_size,
                     font_weight='bold',
                     fill=self.style.marker.font_color,
                     text_anchor='middle',
-                    alignment_baseline='central',
-                    dominant_baseline='middle'
                 )
             )
 
