@@ -448,7 +448,7 @@ class Fretboard(object):
         if output is None:
             output = StringIO()
 
-        self.drawing.write(output)
+        self.drawing.write(output, pretty=True)
         return output
 
     def save(self, filename):
