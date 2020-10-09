@@ -119,12 +119,12 @@ class Fretboard(object):
                 self.drawing.add(
                     self.drawing.line(
                         start=(
-                            self.layout.x,
-                            top + (self.layout.fret_space * index)
+                            round(self.layout.x, 1),
+                            round(top + (self.layout.fret_space * index), 1)
                         ),
                         end=(
-                            self.layout.x + self.layout.width,
-                            top + (self.layout.fret_space * index)
+                            round(self.layout.x + self.layout.width, 1),
+                            round(top + (self.layout.fret_space * index), 1)
                         ),
                         stroke=self.style.fret.color,
                         stroke_width=self.style.fret.size,
@@ -135,9 +135,9 @@ class Fretboard(object):
         top = self.layout.y
         bottom = top + self.layout.height
 
-        label_y = (self.layout.y
+        label_y = round(self.layout.y
                    + self.style.drawing.font_size / 2
-                   - self.style.drawing.spacing)
+                   - self.style.drawing.spacing, 1)
 
         # add a group for the labels to get around IE
         label_group = self.drawing.add(self.drawing.g(id="string_labels"))
@@ -162,7 +162,7 @@ class Fretboard(object):
             elif index == len(self.strings) - 1:
                 offset = - width / 2.
 
-            x = self.layout.x + (self.layout.string_space * index) + offset
+            x = round(self.layout.x + (self.layout.string_space * index) + offset, 1)
 
             self.drawing.add(
                 self.drawing.line(
@@ -186,7 +186,6 @@ class Fretboard(object):
                         font_weight='bold',
                         fill=string.font_color or self.style.marker.color,
                         text_anchor='middle',
-#                        dominant_baseline='hanging'
                     )
                 )
 
@@ -204,17 +203,18 @@ class Fretboard(object):
 
     def draw_inlays(self):
         # x = self.style.drawing.spacing - (self.style.inlays.radius * 4)
-        x = self.layout.x - (self.style.inlays.radius * 4)
+        x = round(self.layout.x - (self.style.inlays.radius * 4), 1)
 
         for index, fret in enumerate(self.frets):
             if index == 0:
                 continue
 
-            y = sum((
+            y = round(
+                sum((
                 self.layout.y,
                 self.style.nut.size,
                 self.layout.fret_space * index,
-            )) - self.layout.fret_space / 2
+            )) - self.layout.fret_space / 2, 1)
 
             if fret % 12 in self.inlays:
                 # Single dot inlay
@@ -290,8 +290,6 @@ class Fretboard(object):
                     font_weight='bold',
                     fill=self.style.drawing.font_color,
                     text_anchor='middle',
-                    alignment_baseline='central',
-                    dominant_baseline='middle'
                 )
             )
 
@@ -304,15 +302,15 @@ class Fretboard(object):
 
     def draw_marker(self, marker):
         # Fretted position, add the marker to the fretboard.
-        x = (self.style.drawing.spacing
+        x = round((self.style.drawing.spacing
              + (self.layout.string_space * marker.string)
-             + self.style.fret_label.width / 2)
-        y = sum((
+             + self.style.fret_label.width / 2), 1)
+        y = round( sum((
             self.layout.y,
             self.style.nut.size,
             (self.layout.fret_space * (marker.fret - self.frets[0])
              - self.layout.fret_space / 2)
-        ))
+        )), 1)
 
         # add a marker group
         blobgrp = self.drawing.add( self.drawing.g(id=marker.groupid))
@@ -339,7 +337,6 @@ class Fretboard(object):
                     font_weight='bold',
                     fill=marker.font_color or self.style.marker.font_color,
                     text_anchor='middle',
-                    dominant_baseline='middle'
                 )
             )
 
@@ -410,8 +407,6 @@ class Fretboard(object):
                     font_weight='bold',
                     fill=self.style.title.font_color,
                     text_anchor='middle',
-                    alignment_baseline='central',
-                    dominant_baseline='hanging'
                 )
             )
 
