@@ -52,9 +52,14 @@ class Chord(object):
             print(positions)
 
         try:
-            self.fingers = list(fingers) if fingers else []
+            # let's make sure we're working with a list of labels (fingers)
+            flist = list(fingers)
         except TypeError:
-            self.fingers = list(str(fingers))
+            flist = list(str(fingers))
+
+        # to avoid filling in markers when we have provided no fingering info
+        self.fingers = [ f if f != '-' else '' for f in flist]
+
 
         self.barre = barre
 
@@ -95,6 +100,9 @@ class Chord(object):
         else:
             # Otherwise check for a barred fret
             for index, finger in enumerate(self.fingers):
+                # this is figuring out whether to automatically generate a barre
+                # if more than one string is fingered in the same place using the same finger
+                # draw a barre or partial barre
                 if (isinstance(finger, int) or finger.isdigit()) and self.fingers.count(finger) > 1:
                     self.barre = self.positions[index]
                     self.fretboard.add_barre(
@@ -251,7 +259,7 @@ class MultiFingerChord(UkuleleChord):
                         string=int(e['string']),
                         fret=int(e['fret']),
                         color=e.get('color'),
-                        label=e['finger'],
+                        label=e.get('finger'),
                         font_color=e.get('font_color')
                         )
 
