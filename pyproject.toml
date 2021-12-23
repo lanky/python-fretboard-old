@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "fretboard"
 version = "1.2.8"
-description = "SVG fretboard and chord diagram generation library"
-authors = ["Stuart Sears <stuart@sjsears.com>"]
+description = "Python toolset to create SVG fretboard images and chord diagrams"
+authors = ["Derek Payton <derek.payton@gmail.com>", "Stuart Sears <stuart@sjsears.com>", "Robin Brown"]
 license = "MIT"
 
 [tool.poetry.dependencies]
@@ -33,3 +33,7 @@ line-length = 88
 target-version = ['py38', 'py39', 'py310']
 include = '\.pyi?$'
 exclude = '/(\.git|_build|build|dist|\.tox|\.venv)/'
+
+[tool.isort]
+# import-sorting plugin
+profile = "black"
