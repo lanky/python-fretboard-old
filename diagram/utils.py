@@ -1,4 +1,9 @@
-import collections
+# python 3.10 moves abstract baase classes into
+# collections.abc
+try:
+    from collections import Mapping
+except ImportError:
+    from collections.abc import Mapping
 
 
 # https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
@@ -13,7 +18,7 @@ def dict_merge(dct, merge_dct):
     """
     for k, v in merge_dct.items():
         if (k in dct and isinstance(dct[k], dict)
-                and isinstance(merge_dct[k], collections.Mapping)):
+                and isinstance(merge_dct[k], Mapping)):
             dict_merge(dct[k], merge_dct[k])
         else:
             dct[k] = merge_dct[k]
