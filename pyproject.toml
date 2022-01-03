@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "fretboard"
+version = "1.2.8"
+description = "SVG fretboard and chord diagram generation library"
+authors = ["Stuart Sears <stuart@sjsears.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+attrdict = "^2.0.1"
+PyYAML = "^6.0"
+svgwrite = "^1.4.1"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.16.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+# configuration for the pyright syntax checker/linter
+# handles warnings about variables for which we do not yet
+# know the type
+reportOptionalSubscript = false
+reportOptionalIterable = false
+reportOptionalMemberAccess = false
+reportGeneralTypeIssues = false
+
+[tool.black]
+# project-specific black setup
+line-length = 88
+target-version = ['py38', 'py39', 'py310']
+include = '\.pyi?$'
+exclude = '/(\.git|_build|build|dist|\.tox|\.venv)/'
