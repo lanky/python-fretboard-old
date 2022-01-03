@@ -1,7 +1,8 @@
 import copy
 
-from attrdict import AttrDict
 import svgwrite
+from attrdict import AttrDict
+
 import diagram
 
 from .compat import StringIO
@@ -17,21 +18,26 @@ class Fretboard(object):
     default_style = AttrDict(diagram.FRETBOARD_STYLE)
 
     def __init__(
-            self,
-            strings=None,
-            frets=(0, 5),
-            inlays=None,
-            title=None,
-            style=None,
-            label_all_frets=False
+        self,
+        strings=None,
+        frets=(0, 5),
+        inlays=None,
+        title=None,
+        style=None,
+        label_all_frets=False,
     ):
         self.frets = list(range(max(frets[0] - 1, 0), frets[1] + 1))
-        self.strings = [AttrDict({
-            'color': None,
-            'label': None,
-            'font_color': None,
-            'font_size': None,
-        }) for _ in range(strings or self.string_count)]
+        self.strings = [
+            AttrDict(
+                {
+                    "color": None,
+                    "label": None,
+                    "font_color": None,
+                    "font_size": None,
+                }
+            )
+            for _ in range(strings or self.string_count)
+        ]
 
         self.markers = []
 
@@ -40,7 +46,6 @@ class Fretboard(object):
         self.inlays = inlays or self.inlays
 
         self.layout = AttrDict()
-
 
         self.style = self.default_style + AttrDict(style or {})
 
@@ -55,15 +60,18 @@ class Fretboard(object):
         self.strings[string].label = label
         self.strings[string].font_color = font_color
 
-    def add_marker(self, string, fret,
-                   color=None, label=None, font_color=None):
-        self.markers.append(AttrDict({
-            'fret': fret,
-            'string': string,
-            'color': color,
-            'label': label,
-            'font_color': font_color,
-        }))
+    def add_marker(self, string, fret, color=None, label=None, font_color=None):
+        self.markers.append(
+            AttrDict(
+                {
+                    "fret": fret,
+                    "string": string,
+                    "color": color,
+                    "label": label,
+                    "font_color": font_color,
+                }
+            )
+        )
 
     def add_barre(self, fret, strings, finger):
         self.add_marker(
@@ -75,34 +83,32 @@ class Fretboard(object):
     def calculate_layout(self):
         # Bounding box of our fretboard
         # this needs changing to  indent a little on the left
-        self.layout.x = (self.style.drawing.spacing
-                        + self.style.fret_label.width / 2)
+        self.layout.x = self.style.drawing.spacing + self.style.fret_label.width / 2
 
         # Above the fret box is the title, with padding either side
         self.layout.y = self.style.drawing.spacing
         if self.title:
-            self.layout.y += (self.style.drawing.spacing
-                              + self.style.title.font_size)
+            self.layout.y += self.style.drawing.spacing + self.style.title.font_size
 
         # Add some extra space on the right for fret indicators
-        self.layout.width = (self.style.drawing.width
-                             - self.layout.x
-                             - self.style.drawing.spacing / 2)
-#        if self.frets[0] > 0:
-# allow for fret labels on ALL diagrams for consistent width
+        self.layout.width = (
+            self.style.drawing.width - self.layout.x - self.style.drawing.spacing / 2
+        )
+        #        if self.frets[0] > 0:
+        # allow for fret labels on ALL diagrams for consistent width
         self.layout.width -= self.style.fret_label.width
 
-        self.layout.height = (self.style.drawing.height
-                              - (self.layout.y + self.style.drawing.spacing))
+        self.layout.height = self.style.drawing.height - (
+            self.layout.y + self.style.drawing.spacing
+        )
 
         # Spacing between the strings
         self.layout.string_space = self.layout.width / (len(self.strings) - 1)
 
         # Spacing between the frets, with room at the top and bottom for the
         # nut
-        self.layout.fret_space = (
-                (self.layout.height - self.style.nut.size * 2)
-                / (len(self.frets) - 1)
+        self.layout.fret_space = (self.layout.height - self.style.nut.size * 2) / (
+            len(self.frets) - 1
         )
 
     def draw_frets(self):
@@ -115,13 +121,10 @@ class Fretboard(object):
             else:
                 self.drawing.add(
                     self.drawing.line(
-                        start=(
-                            self.layout.x,
-                            top + (self.layout.fret_space * index)
-                        ),
+                        start=(self.layout.x, top + (self.layout.fret_space * index)),
                         end=(
                             self.layout.x + self.layout.width,
-                            top + (self.layout.fret_space * index)
+                            top + (self.layout.fret_space * index),
                         ),
                         stroke=self.style.fret.color,
                         stroke_width=self.style.fret.size,
@@ -132,9 +135,11 @@ class Fretboard(object):
         top = self.layout.y
         bottom = top + self.layout.height
 
-        label_y = (self.layout.y
-                   + self.style.drawing.font_size / 2
-                   - self.style.drawing.spacing)
+        label_y = (
+            self.layout.y
+            + self.style.drawing.font_size / 2
+            - self.style.drawing.spacing
+        )
 
         for index, string in enumerate(self.strings):
             # adds a style option so all strings have the same width
@@ -143,17 +148,17 @@ class Fretboard(object):
             else:
                 # previous default, strings get thinner from left to right
                 # just like real ones.
-                width = (self.style.string.size
-                         - ((self.style.string.size / (len(self.strings) * 1.5))
-                            * index))
+                width = self.style.string.size - (
+                    (self.style.string.size / (len(self.strings) * 1.5)) * index
+                )
 
             # Offset the first and last strings, so they're not drawn
             # outside the edge of the nut.
             offset = 0
             if index == 0:
-                offset = width / 2.
+                offset = width / 2.0
             elif index == len(self.strings) - 1:
-                offset = - width / 2.
+                offset = -width / 2.0
 
             x = self.layout.x + (self.layout.string_space * index) + offset
 
@@ -162,7 +167,7 @@ class Fretboard(object):
                     start=(x, top),
                     end=(x, bottom),
                     stroke=string.color or self.style.string.color,
-                    stroke_width=width
+                    stroke_width=width,
                 )
             )
 
@@ -172,14 +177,14 @@ class Fretboard(object):
                     self.drawing.text(
                         string.label,
                         insert=(x, label_y),
-                        font_family=self.style.string.label_font_family or
-                                    self.style.drawing.font_family,
-                        font_size=self.style.string.label_font_size or
-                                  self.style.drawing.font_size,
-                        font_weight='bold',
+                        font_family=self.style.string.label_font_family
+                        or self.style.drawing.font_family,
+                        font_size=self.style.string.label_font_size
+                        or self.style.drawing.font_size,
+                        font_weight="bold",
                         fill=string.font_color or self.style.marker.color,
-                        text_anchor='middle',
-                        dominant_baseline='hanging'
+                        text_anchor="middle",
+                        dominant_baseline="hanging",
                     )
                 )
 
@@ -203,11 +208,16 @@ class Fretboard(object):
             if index == 0:
                 continue
 
-            y = sum((
-                self.layout.y,
-                self.style.nut.size,
-                self.layout.fret_space * index,
-            )) - self.layout.fret_space / 2
+            y = (
+                sum(
+                    (
+                        self.layout.y,
+                        self.style.nut.size,
+                        self.layout.fret_space * index,
+                    )
+                )
+                - self.layout.fret_space / 2
+            )
 
             if fret % 12 in self.inlays:
                 # Single dot inlay
@@ -247,29 +257,33 @@ class Fretboard(object):
         # each entry is a 3-tuple: (x, y, text)
         fretlist = []
         # x coordinate
-        label_x = sum((
-            self.layout.x,                   # left of fretboard
-            self.layout.width,               # width of fretboard
-            self.style.marker.radius,        # radius of marker or barre
-            self.style.marker.stroke_width,  #
-            self.style.fret_label.width / 2, # half label width (center-aligned)
-        ))
+        label_x = sum(
+            (
+                self.layout.x,  # left of fretboard
+                self.layout.width,  # width of fretboard
+                self.style.marker.radius,  # radius of marker or barre
+                self.style.marker.stroke_width,  #
+                self.style.fret_label.width / 2,  # half label width (center-aligned)
+            )
+        )
 
         for i, f in enumerate(self.frets[1:]):
             # this is the part that will be different for each fret
-            y = sum((
-                self.layout.y,                   # top of fretboard
-                self.style.nut.size,             # nut size/weight (configurable)
-                self.layout.fret_space / 2,      # middle of fret (vertically)
-                self.layout.fret_space * i       # move down 'i' frets
-            ))
+            y = sum(
+                (
+                    self.layout.y,  # top of fretboard
+                    self.style.nut.size,  # nut size/weight (configurable)
+                    self.layout.fret_space / 2,  # middle of fret (vertically)
+                    self.layout.fret_space * i,  # move down 'i' frets
+                )
+            )
 
             fretlist.append((label_x, y, str(f)))
 
         # if we aren't in open/first position...
         if not self.style.drawing.label_all_frets:
             # ignore all but the first entry
-            fretlist = [ fretlist[0] ]
+            fretlist = [fretlist[0]]
         for x, y, label_text in fretlist:
             # add a new text element at the above coordinates
             self.drawing.add(
@@ -277,14 +291,14 @@ class Fretboard(object):
                     label_text,
                     insert=(x, y),
                     font_family=self.style.drawing.font_family,
-                    font_size=self.style.fret_label.font_size or
-                              self.style.drawing.font_size,
-                    font_style=self.style.fret_label.font_style or 'italic',
-                    font_weight='bold',
+                    font_size=self.style.fret_label.font_size
+                    or self.style.drawing.font_size,
+                    font_style=self.style.fret_label.font_style or "italic",
+                    font_weight="bold",
                     fill=self.style.drawing.font_color,
-                    text_anchor='middle',
-                    alignment_baseline='central',
-                    dominant_baseline='middle'
+                    text_anchor="middle",
+                    alignment_baseline="central",
+                    dominant_baseline="middle",
                 )
             )
 
@@ -297,15 +311,21 @@ class Fretboard(object):
 
     def draw_marker(self, marker):
         # Fretted position, add the marker to the fretboard.
-        x = (self.style.drawing.spacing
-             + (self.layout.string_space * marker.string)
-             + self.style.fret_label.width / 2)
-        y = sum((
-            self.layout.y,
-            self.style.nut.size,
-            (self.layout.fret_space * (marker.fret - self.frets[0])
-             - self.layout.fret_space / 2)
-        ))
+        x = (
+            self.style.drawing.spacing
+            + (self.layout.string_space * marker.string)
+            + self.style.fret_label.width / 2
+        )
+        y = sum(
+            (
+                self.layout.y,
+                self.style.nut.size,
+                (
+                    self.layout.fret_space * (marker.fret - self.frets[0])
+                    - self.layout.fret_space / 2
+                ),
+            )
+        )
 
         self.drawing.add(
             self.drawing.circle(
@@ -313,7 +333,7 @@ class Fretboard(object):
                 r=self.style.marker.radius,
                 fill=marker.color or self.style.marker.color,
                 stroke=self.style.marker.border_color,
-                stroke_width=self.style.marker.stroke_width
+                stroke_width=self.style.marker.stroke_width,
             )
         )
 
@@ -325,28 +345,36 @@ class Fretboard(object):
                     insert=(x, y),
                     font_family=self.style.drawing.font_family,
                     font_size=self.style.drawing.font_size,
-                    font_weight='bold',
+                    font_weight="bold",
                     fill=marker.font_color or self.style.marker.font_color,
-                    text_anchor='middle',
-                    alignment_baseline='central',
-                    dominant_baseline='middle'
+                    text_anchor="middle",
+                    alignment_baseline="central",
+                    dominant_baseline="middle",
                 )
             )
 
     def draw_barre(self, marker):
-        start_x = (self.style.drawing.spacing
-                   + self.layout.string_space * marker.string[0]
-                   + self.style.fret_label.width / 2)
-        end_x = (self.style.drawing.spacing
-                 + self.layout.string_space * marker.string[1]
-                 + self.style.fret_label.width / 2)
+        start_x = (
+            self.style.drawing.spacing
+            + self.layout.string_space * marker.string[0]
+            + self.style.fret_label.width / 2
+        )
+        end_x = (
+            self.style.drawing.spacing
+            + self.layout.string_space * marker.string[1]
+            + self.style.fret_label.width / 2
+        )
 
-        y = sum((
-            self.layout.y,
-            self.style.nut.size,
-            (self.layout.fret_space * (marker.fret - self.frets[0])
-             - self.layout.fret_space / 2)
-        ))
+        y = sum(
+            (
+                self.layout.y,
+                self.style.nut.size,
+                (
+                    self.layout.fret_space * (marker.fret - self.frets[0])
+                    - self.layout.fret_space / 2
+                ),
+            )
+        )
 
         # Lines don't support borders, so fake it by drawing
         # a slightly larger line behind it.
@@ -355,9 +383,10 @@ class Fretboard(object):
                 start=(start_x, y),
                 end=(end_x, y),
                 stroke=self.style.marker.border_color,
-                stroke_linecap='round',
-                stroke_width=(self.style.marker.radius * 2
-                              + self.style.marker.stroke_width * 2)
+                stroke_linecap="round",
+                stroke_width=(
+                    self.style.marker.radius * 2 + self.style.marker.stroke_width * 2
+                ),
             )
         )
 
@@ -366,8 +395,8 @@ class Fretboard(object):
                 start=(start_x, y),
                 end=(end_x, y),
                 stroke=self.style.marker.color,
-                stroke_linecap='round',
-                stroke_width=self.style.marker.radius * 2
+                stroke_linecap="round",
+                stroke_width=self.style.marker.radius * 2,
             )
         )
 
@@ -378,17 +407,21 @@ class Fretboard(object):
                     insert=(start_x, y),
                     font_family=self.style.drawing.font_family,
                     font_size=self.style.drawing.font_size,
-                    font_weight='bold',
+                    font_weight="bold",
                     fill=self.style.marker.font_color,
-                    text_anchor='middle',
-                    alignment_baseline='central',
-                    dominant_baseline='middle'
+                    text_anchor="middle",
+                    alignment_baseline="central",
+                    dominant_baseline="middle",
                 )
             )
 
     def draw_title(self):
         if self.title is not None:
-            x = self.layout.width/2 + self.style.drawing.spacing + (self.style.fret_label.width / 2)
+            x = (
+                self.layout.width / 2
+                + self.style.drawing.spacing
+                + (self.style.fret_label.width / 2)
+            )
             y = self.style.drawing.spacing
             self.drawing.add(
                 self.drawing.text(
@@ -396,29 +429,25 @@ class Fretboard(object):
                     insert=(x, y),
                     font_family=self.style.title.font_family,
                     font_size=self.style.title.font_size,
-                    font_weight='bold',
+                    font_weight="bold",
                     fill=self.style.title.font_color,
-                    text_anchor='middle',
-                    alignment_baseline='central',
-                    dominant_baseline='hanging'
+                    text_anchor="middle",
+                    alignment_baseline="central",
+                    dominant_baseline="hanging",
                 )
             )
 
     def draw(self):
-        self.drawing = svgwrite.Drawing(size=(
-            self.style.drawing.width,
-            self.style.drawing.height
-        ))
+        self.drawing = svgwrite.Drawing(
+            size=(self.style.drawing.width, self.style.drawing.height)
+        )
 
         if self.style.drawing.background_color is not None:
             self.drawing.add(
                 self.drawing.rect(
                     insert=(0, 0),
-                    size=(
-                        self.style.drawing.width,
-                        self.style.drawing.height
-                    ),
-                    fill=self.style.drawing.background_color
+                    size=(self.style.drawing.width, self.style.drawing.height),
+                    fill=self.style.drawing.background_color,
                 )
             )
 
@@ -441,7 +470,7 @@ class Fretboard(object):
         return output
 
     def save(self, filename):
-        with open(filename, 'w') as output:
+        with open(filename, "w") as output:
             self.render(output)
 
 

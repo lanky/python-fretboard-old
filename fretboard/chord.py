@@ -1,9 +1,11 @@
+import logging
+
 from attrdict import AttrDict
+
 import diagram
+
 from .compat import StringIO
 from .utils import convert_int
-
-import logging
 
 
 class Chord(object):
@@ -22,35 +24,34 @@ class Chord(object):
     barre = bool, whether to draw a full-width barre or not.
     This will auotmatically be drawn at the lowest fretted (non-zero) position,
     """
+
     default_style = AttrDict(diagram.FRETBOARD_STYLE) + AttrDict(diagram.CHORD_STYLE)
     inlays = None
     strings = None
 
     def __init__(
-            self,
-            positions=None,
-            fingers=None,
-            barre=False,
-            title=None,
-            style=None,
+        self,
+        positions=None,
+        fingers=None,
+        barre=False,
+        title=None,
+        style=None,
     ):
 
         if positions is None:
             positions = []
         elif isinstance(positions, str):
-            if '-' in positions:
+            if "-" in positions:
                 # use - to separate numbers when frets go above 9, e.g., x-x-0-10-10-10
-                positions = positions.split('-')
+                positions = positions.split("-")
             else:
                 positions = list(positions)
         # oops,. did we put in something like 5333 without quoting?
         if isinstance(positions, int):
             positions = list(str(positions))
 
-        try:
-            self.positions = [ convert_int(p) for p in positions ]
-        except:
-            print(positions)
+        # returns [ int(x) or None for each position ]
+        self.positions = [convert_int(p) for p in positions]
 
         try:
             self.fingers = list(fingers) if fingers else []
@@ -75,13 +76,14 @@ class Chord(object):
 
         self.fretboard = None
 
-
     @property
     def fretboard_cls(self):
         raise NotImplementedError
 
     def get_fret_range(self):
-        fretted_positions = list(filter(lambda pos: isinstance(pos, int), self.positions))
+        fretted_positions = list(
+            filter(lambda pos: isinstance(pos, int), self.positions)
+        )
         if max(fretted_positions) < 5:
             first_fret = 0
         else:
@@ -94,7 +96,7 @@ class Chord(object):
             frets=self.get_fret_range(),
             inlays=self.inlays,
             title=self.title,
-            style=self.style
+            style=self.style,
         )
 
         if self.barre is not None:
@@ -107,11 +109,16 @@ class Chord(object):
         else:
             # Otherwise check for a barred fret
             for index, finger in enumerate(self.fingers):
-                if (isinstance(finger, int) or finger.isdigit()) and self.fingers.count(finger) > 1:
+                if (isinstance(finger, int) or finger.isdigit()) and self.fingers.count(
+                    finger
+                ) > 1:
                     self.barre = self.positions[index]
                     self.fretboard.add_barre(
                         fret=self.barre,
-                        strings=(index, len(self.fingers) - self.fingers[::-1].index(finger) - 1),
+                        strings=(
+                            index,
+                            len(self.fingers) - self.fingers[::-1].index(finger) - 1,
+                        ),
                         finger=finger,
                     )
                     break
@@ -121,7 +128,7 @@ class Chord(object):
             try:
                 fret = self.positions[string]
             except IndexError:
-                pos = None
+                fret = None
 
             # Determine if the string is muted or open
             is_muted = False
@@ -135,8 +142,10 @@ class Chord(object):
             if is_muted or is_open:
                 self.fretboard.add_string_label(
                     string=string,
-                    label='X' if is_muted else 'O',
-                    font_color=self.style.string.muted_font_color if is_muted else self.style.string.open_font_color
+                    label="X" if is_muted else "O",
+                    font_color=self.style.string.muted_font_color
+                    if is_muted
+                    else self.style.string.open_font_color,
                 )
             elif fret is not None and fret != self.barre:
                 # Add the fret marker
@@ -161,7 +170,7 @@ class Chord(object):
         return output
 
     def save(self, filename):
-        with open(filename, 'w') as output:
+        with open(filename, "w") as output:
             self.render(output)
 
 
@@ -182,6 +191,7 @@ class UkuleleChord(Chord):
     def fretboard_cls(self):
         return diagram.UkuleleFretboard
 
+
 class MultiFingerChord(UkuleleChord):
     """
     A special case of UkuleleChord that can handle
@@ -190,38 +200,40 @@ class MultiFingerChord(UkuleleChord):
 
     def __init__(self, **kwargs):
 
-        if kwargs.get('barre', False):
+        if kwargs.get("barre", False):
             # figure out where the barre goes.
             pass
 
         # ensure we have only expected args for the parent class
         superargs = {
-            'positions': kwargs.get('positions', None),
-            'fingers': kwargs.get('fingers', None),
-            'barre': kwargs.get('barre', False),
-            'title': kwargs.get('title', None),
-            'style': kwargs.get('style', None),
-            }
+            "positions": kwargs.get("positions", None),
+            "fingers": kwargs.get("fingers", None),
+            "barre": kwargs.get("barre", False),
+            "title": kwargs.get("title", None),
+            "style": kwargs.get("style", None),
+        }
 
         super().__init__(**superargs)
 
-        fretted_positions = list(filter(lambda pos: isinstance(pos, int), self.positions))
+        fretted_positions = list(
+            filter(lambda pos: isinstance(pos, int), self.positions)
+        )
         print(fretted_positions)
         self.maxfret = max(fretted_positions) or None
-        self.minfret = min([p for p in fretted_positions if p >= 0 ])
+        self.minfret = min([p for p in fretted_positions if p >= 0])
         # print("min: {} max: {}".format(self.minfret, self.maxfret))
 
         # our additional key for extra fingers
-        self.extras = kwargs.get('extras')
+        self.extras = kwargs.get("extras")
         print("extras: {}".format(self.extras))
-        fspec = kwargs.get('fret_range')
+        fspec = kwargs.get("fret_range")
         # sanity checks
         # 1. is it a 2-tuple or list?
         # 2. arww the values ints
         # 3. is x[0] < x[1]
         if fspec is None:
             self.fretspec = None
-        elif not (isinstance(fspec, (tuple,list)) and len(fspec) == 2):
+        elif not (isinstance(fspec, (tuple, list)) and len(fspec) == 2):
             print("fret range must have 2 entries")
             self.fretspec = None
         elif not all([isinstance(x, int) for x in fspec]):
@@ -236,7 +248,6 @@ class MultiFingerChord(UkuleleChord):
             self.fretspec = None
         else:
             self.fretspec = fspec
-
 
     def get_fret_range(self):
         """
@@ -258,16 +269,14 @@ class MultiFingerChord(UkuleleChord):
         print("{0} fret range: {1}-{2}".format(self.title, *fr))
         return fr
 
-
     def draw(self):
         super(MultiFingerChord, self).draw()
         if self.extras is not None:
             for e in self.extras:
                 self.fretboard.add_marker(
-                        string=int(e['string']),
-                        fret=int(e['fret']),
-                        color=e.get('color'),
-                        label=e['label'],
-                        font_color=e.get('font_color')
-                        )
-
+                    string=int(e["string"]),
+                    fret=int(e["fret"]),
+                    color=e.get("color"),
+                    label=e["label"],
+                    font_color=e.get("font_color"),
+                )
