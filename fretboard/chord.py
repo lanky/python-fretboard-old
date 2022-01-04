@@ -5,6 +5,7 @@ from attrdict import AttrDict
 import diagram
 
 from .compat import StringIO
+from .config import DEFAULTS
 from .utils import convert_int
 
 
@@ -25,7 +26,7 @@ class Chord(object):
     This will auotmatically be drawn at the lowest fretted (non-zero) position,
     """
 
-    default_style = AttrDict(diagram.FRETBOARD_STYLE) + AttrDict(diagram.CHORD_STYLE)
+    default_style = AttrDict(DEFAULTS["fretboard"]) + AttrDict(DEFAULTS["chord"])
     inlays = None
     strings = None
 

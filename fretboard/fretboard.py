@@ -6,7 +6,7 @@ from attrdict import AttrDict
 import diagram
 
 from .compat import StringIO
-from .utils import dict_merge
+from .config import DEFAULTS
 
 # fretboard = Fretboard(strings=6, frets=(3, 8))
 # fretboard.add_string_label(string=1, label='X', color='')
@@ -15,7 +15,7 @@ from .utils import dict_merge
 
 
 class Fretboard(object):
-    default_style = AttrDict(diagram.FRETBOARD_STYLE)
+    default_style = AttrDict(DEFAULTS["fretboard"])
 
     def __init__(
         self,
@@ -48,6 +48,8 @@ class Fretboard(object):
         self.layout = AttrDict()
 
         self.style = self.default_style + AttrDict(style or {})
+
+        self.style.drawing.label_all_frets = label_all_frets
 
         self.title = title
 
