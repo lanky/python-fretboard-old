@@ -50,20 +50,18 @@ marker:
 class Fretboard(object):
     default_style = yaml.safe_load(DEFAULT_STYLE)
 
-    # Guitars and basses have different inlay patterns than, e.g., ukulele
-    # A double inlay will be added at the octave (12th fret)
-    inlays = (3, 5, 7, 9)
-
-    def __init__(self, strings=6, frets=(0, 5), inlays=None, style=None):
+    def __init__(self, strings=None, frets=(0, 5), inlays=None, style=None):
         self.frets = list(range(max(frets[0] - 1, 0), frets[1] + 1))
         self.strings = [attrdict.AttrDict({
             'color': None,
             'label': None,
             'font_color': None,
-        }) for x in range(strings)]
+        }) for _ in range(strings or self.string_count)]
 
         self.markers = []
 
+        # Guitars and basses have different inlay patterns than, e.g., ukulele
+        # A double inlay will be added at the 12th/24th/... fret regardless.
         self.inlays = inlays or self.inlays
 
         self.layout = attrdict.AttrDict()
@@ -74,6 +72,8 @@ class Fretboard(object):
                 style or {}
             )
         )
+
+        self.drawing = None
 
     def add_string_label(self, string, label, font_color=None):
         self.strings[string].label = label
@@ -87,6 +87,13 @@ class Fretboard(object):
             'label': label,
             'font_color': font_color,
         }))
+
+    def add_barre(self, fret, strings, finger):
+        self.add_marker(
+            string=(strings[0], strings[1]),
+            fret=fret,
+            label=finger,
+        )
 
     def calculate_layout(self):
         # Bounding box of our fretboard
@@ -147,10 +154,11 @@ class Fretboard(object):
                 )
             )
 
-            # Draw the label obove the string
+            # Draw the label above the string
             if string.label is not None:
                 self.drawing.add(
-                    self.drawing.text(string.label,
+                    self.drawing.text(
+                        string.label,
                         insert=(x, label_y),
                         font_family=self.style.drawing.font_family,
                         font_size=self.style.drawing.font_size,
@@ -174,7 +182,7 @@ class Fretboard(object):
             )
 
     def draw_inlays(self):
-        x = (self.style.drawing.spacing) - (self.style.inlays.radius * 4)
+        x = self.style.drawing.spacing - (self.style.inlays.radius * 4)
 
         for index, fret in enumerate(self.frets):
             if index == 0:
@@ -217,7 +225,8 @@ class Fretboard(object):
             x = self.layout.width + self.style.drawing.spacing + self.style.inlays.radius
             y = self.layout.y + self.style.nut.size + (self.style.drawing.font_size * .2)
             self.drawing.add(
-                self.drawing.text('{0}fr'.format(self.frets[0]),
+                self.drawing.text(
+                    '{0}fr'.format(self.frets[0]),
                     insert=(x, y),
                     font_family=self.style.drawing.font_family,
                     font_size=self.style.drawing.font_size,
@@ -257,7 +266,8 @@ class Fretboard(object):
         # Draw the label
         if marker.label is not None:
             self.drawing.add(
-                self.drawing.text(marker.label,
+                self.drawing.text(
+                    marker.label,
                     insert=(x, y),
                     font_family=self.style.drawing.font_family,
                     font_size=self.style.drawing.font_size,
@@ -302,7 +312,8 @@ class Fretboard(object):
 
         if marker.label is not None:
             self.drawing.add(
-                self.drawing.text(marker.label,
+                self.drawing.text(
+                    marker.label,
                     insert=(start_x, y),
                     font_family=self.style.drawing.font_family,
                     font_size=self.style.drawing.font_size,
@@ -351,3 +362,18 @@ class Fretboard(object):
     def save(self, filename):
         with open(filename, 'w') as output:
             self.render(output)
+
+
+class GuitarFretboard(Fretboard):
+    string_count = 6
+    inlays = (3, 5, 7, 9)
+
+
+class BassFretboard(Fretboard):
+    string_count = 4
+    inlays = (3, 5, 7, 9)
+
+
+class UkuleleFretboard(Fretboard):
+    string_count = 4
+    inlays = (3, 5, 7, 10)
