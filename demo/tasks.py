@@ -87,5 +87,6 @@ def serve(ctx):
     server.watch(__file__, lambda: os.system("invoke build"))
     server.watch("index.html", lambda: os.system("invoke build"))
     server.watch("../fretboard/", lambda: os.system("invoke build"))
+    server.watch("../config.yml", lambda: os.system("invoke build"))
 
     server.serve(root=".", host="localhost", liveport=35729, port=8080)
