@@ -1,7 +1,7 @@
 import copy
 from typing import Optional, Tuple
 
-import attrdict3 as attrdict
+import attrdict
 import svgwrite
 import yaml
 
@@ -286,7 +286,7 @@ class Fretboard(object):
 
     def draw_marker(self, marker):
         # Fretted position, add the marker to the fretboard.
-        x = sum(self.style.drawing.spacing, self.layout.string_space * marker.string)
+        x = sum((self.style.drawing.spacing, self.layout.string_space * marker.string))
         y = sum(
             (
                 self.layout.y,
