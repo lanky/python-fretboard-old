@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "fretboard2"
+version = "1.1.0"
+description = "A Python library for generating SVG Fretboard images and chord diagrams"
+authors = [
+    "Derek Payton <derek.payton@gmail.com>",
+    "Robin Brown <@birdcolour>",
+    "Stuart Sears <stuart@sjsears.com>",
+]
+license = "MIT"
+repository = "https://github.com/lanky/python-fretboard2"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyyaml = "^6.0.1"
+svgwrite = "^1.4.3"
+attrdict3 = "^2.0.2"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.2.1"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+black = "^24.1.1"
+isort = "^5.13.2"
+flake8 = "^7.0.0"
+pip-tools = "^7.3.0"
+
+
+[tool.poetry.group.demo.dependencies]
+invoke = "^2.2.0"
+livereload = "^2.6.3"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+# configuration for the pyright syntax checker/linter
+# handles warnings about variables for which we do not yet
+# know the type
+reportOptionalSubscript = false
+reportOptionalIterable = false
+reportOptionalMemberAccess = false
+reportGeneralTypeIssues = false
+
+[tool.black]
+# project-specific black setup
+target-version = ['py39', 'py310', 'py311', 'py312']
+line-length = 88
+include = '\.pyi?$'
+exclude = '/(\.git|_build|build|dist|\.tox|\.venv)/'
+
+[tool.isort]
+# import-sorting plugin
+profile = "black"
